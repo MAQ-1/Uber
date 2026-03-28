@@ -22,4 +22,10 @@ router.post('/login', [
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
 ], captainController.loginCaptain);
 
+// GET route for captain profile
+router.get('/profile', authMiddleware.authCaptain, captainController.getCaptainProfile);
+
+// POST route for captain logout
+router.post('/logout', authMiddleware.authCaptain, captainController.logoutCaptain);
+
 module.exports = router;

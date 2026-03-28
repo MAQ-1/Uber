@@ -1,5 +1,6 @@
 const captainModel = require('../models/captain.model');
 const { validationResult } = require('express-validator');
+const blacklistModel = require('../models/blacklist.model');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
@@ -98,4 +99,22 @@ module.exports.loginCaptain = async (req, res) => {
         console.log("Error logging in captain:", error);
         res.status(500).json({ message: "Error logging in captain" });
     }
+}
+
+// Get captain profile
+module.exports.getCaptainProfile = async (req, res) => {
+    res.status(200).json({
+        message: "Captain profile retrieved successfully",
+        captain: req.captain
+    });
+}
+
+// Logout a captain
+module.exports.logoutCaptain = async (req, res) => {
+ const token = req.cookies?.token || req.header('Authorization')?.replace('Bearer ', '');
+   
+    await blacklistModel.create({ token: token });
+
+    res.clearCookie("token");
+    res.status(200).json({ message: "Captain logged out successfully" });
 }
