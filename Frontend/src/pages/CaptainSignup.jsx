@@ -1,37 +1,72 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useContext, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { CaptainDataContext } from '../context/CaptainContext.jsx'
+import uberLogo from '../assets/Uber.png'
 
 // Captain signup page — allows new captains to create an account
 const CaptainSignup = () => {
   // State for each form field
-  const [email, setEmail] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const [firstname, setfirstname] = React.useState('')
-  const [lastname, setlastname] = React.useState('')
-  // State to store submitted captain data
-  const [captainData, setCaptainData] = React.useState({})
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [firstname, setfirstname] = useState('')
+  const [lastname, setlastname] = useState('')
+  const [vehicleColor, setVehicleColor] = useState('')
+  const [vehiclePlate, setVehiclePlate] = useState('')
+  const [vehicleCapacity, setVehicleCapacity] = useState('')
+  const [vehicleType, setVehicleType] = useState('car')
+  const navigate = useNavigate()
+  const { setCaptain } = useContext(CaptainDataContext)
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault()
 
-    // Build data object matching backend Fullname structure
-    const data = {
+    const captainData = {
       Fullname: {
-        firstname: firstname,
-        lastname: lastname
+        Firstname: firstname,
+        Lastname: lastname
       },
-      email: email,
-      password: password,
+      email,
+      password,
+      vehicle: {
+        color: vehicleColor,
+        plate: vehiclePlate,
+        capacity: Number(vehicleCapacity),
+        vehicleType
+      }
     }
 
-    setCaptainData(data)
-    console.log(data)
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/captains/register`,
+        captainData
+      )
+
+      if (response.status === 201) {
+        const data = response.data
+        setCaptain(data.captain)
+        console.log('Captain signup successful')
+        localStorage.setItem('token', data.token);
+        navigate('/captain-login')
+      }
+    } catch (error) {
+      console.error(error)
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.errors?.[0]?.msg ||
+        'Something went wrong'
+      alert(errMsg)
+    }
 
     // Reset form fields after submission
     setEmail('')
     setPassword('')
     setfirstname('')
     setlastname('')
+    setVehicleColor('')
+    setVehiclePlate('')
+    setVehicleCapacity('')
+    setVehicleType('car')
   }
 
   return (
@@ -39,7 +74,7 @@ const CaptainSignup = () => {
 
       <div>
         {/* Uber logo */}
-        <img src='../src/assets/Uber.png' alt="Uber Logo" className='w-14 mb-6' />
+        <img src={uberLogo} alt="Uber Logo" className='w-14 mb-6' />
         <h2 className='text-3xl font-bold mb-1'>Register as Captain</h2>
         <p className='text-sm text-gray-500 mb-6'>Start earning by driving with Uber</p>
 
@@ -81,11 +116,47 @@ const CaptainSignup = () => {
             onChange={(e) => setPassword(e.target.value)}
             className='w-full border-2 border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-6 text-base outline-none focus:border-black focus:bg-white transition' />
 
+          <h3 className='text-sm font-bold text-gray-700 mb-2'>Vehicle Color</h3>
+          <input required
+            type="text"
+            placeholder='e.g. White'
+            value={vehicleColor}
+            onChange={(e) => setVehicleColor(e.target.value)}
+            className='w-full border-2 border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-5 text-base outline-none focus:border-black focus:bg-white transition' />
+
+          <h3 className='text-sm font-bold text-gray-700 mb-2'>Vehicle Plate</h3>
+          <input required
+            type="text"
+            placeholder='e.g. MH12AB1234'
+            value={vehiclePlate}
+            onChange={(e) => setVehiclePlate(e.target.value)}
+            className='w-full border-2 border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-5 text-base outline-none focus:border-black focus:bg-white transition' />
+
+          <h3 className='text-sm font-bold text-gray-700 mb-2'>Vehicle Capacity</h3>
+          <input required
+            type="number"
+            min="1"
+            placeholder='e.g. 4'
+            value={vehicleCapacity}
+            onChange={(e) => setVehicleCapacity(e.target.value)}
+            className='w-full border-2 border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-5 text-base outline-none focus:border-black focus:bg-white transition' />
+
+          <h3 className='text-sm font-bold text-gray-700 mb-2'>Vehicle Type</h3>
+          <select
+            value={vehicleType}
+            onChange={(e) => setVehicleType(e.target.value)}
+            className='w-full border-2 border-gray-200 bg-gray-50 rounded-xl px-4 py-3 mb-6 text-base outline-none focus:border-black focus:bg-white transition'
+          >
+            <option value="car">Car</option>
+            <option value="motorcycle">Motorcycle</option>
+            <option value="auto">Auto</option>
+          </select>
+
           <button className='w-full bg-black text-white py-3 rounded-xl text-lg font-semibold hover:bg-gray-900 transition'>Create Account</button>
         </form>
 
         {/* Link to captain login for existing captains */}
-        <p className='text-center mt-4 text-sm text-gray-600'>Already have an account? <Link to="/Captain-login" className='text-black font-bold underline'>Login</Link></p>
+        <p className='text-center mt-4 text-sm text-gray-600'>Already have an account? <Link to="/captain-login" className='text-black font-bold underline'>Login</Link></p>
       </div>
 
       {/* Privacy policy notice at the bottom */}

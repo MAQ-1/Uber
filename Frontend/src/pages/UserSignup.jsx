@@ -1,5 +1,9 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useContext } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {UserdataContext} from '../context/userContext.jsx'
+import axios from 'axios'
+import uberLogo from '../assets/Uber.png'
+
 
 // User signup page — allows new users to create an account
 const UserSignup = () => {
@@ -8,38 +12,65 @@ const UserSignup = () => {
   const [lastname, setlastname] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  // State to store submitted user data
-  const [userdata, setUserdata] = useState({})
 
-  const submitHandler = (e) => {
-    e.preventDefault()
+  const navigate = useNavigate()
+  const { setUser } = useContext(UserdataContext)
 
-    // Build data object matching backend Fullname structure
-    const data = {
-      Fullname: {
-        firstname: firstname,
-        lastname: lastname
-      },
-      email: email,
-      password: password,
+
+
+const submitHandler = async (e) => {
+  e.preventDefault();
+
+  const newUser = {
+    Fullname: {
+      Firstname: firstname,
+      Lastname: lastname
+    },
+    email,
+    password,
+  };
+
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/users/register`,
+      newUser
+    );
+
+    if (response.status === 201) {
+      const data = response.data;
+
+      setUser(data.user);
+
+      console.log("Signup successful 🎉");
+      localStorage.setItem('token', data.token);
+      navigate('/login');
     }
 
-    setUserdata(data)
-    console.log(data)
+  } catch (error) {
+    console.error(error);
 
-    // Reset form fields after submission
-    setfirstname('')
-    setlastname('')
-    setEmail('')
-    setPassword('')
+      const errMsg =
+      error?.response?.data?.message ||
+      error?.response?.data?.errors?.[0]?.msg ||
+      "Something went wrong";
+
+    alert(errMsg);
   }
+
+  // reset fields
+  setfirstname('');
+  setlastname('');
+  setEmail('');
+  setPassword('');
+};
+
 
   return (
     <div className='h-screen flex flex-col justify-between px-7 py-10'>
 
       <div>
         {/* Uber logo */}
-        <img src='../src/assets/Uber.png' alt="Uber Logo" className='w-14 mb-6' />
+        <img src={uberLogo} alt="Uber Logo" className='w-14 mb-6' />
         <h2 className='text-3xl font-bold mb-1'>Create Account</h2>
         <p className='text-sm text-gray-500 mb-6'>Sign up to get started with Uber</p>
 

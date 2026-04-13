@@ -1,25 +1,47 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import React, { useContext, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { CaptainDataContext } from '../context/CaptainContext.jsx'
+import uberLogo from '../assets/Uber.png'
 
 // Captain login page — allows existing captains to sign in
 const CaptainLogin = () => {
   // State for form fields
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  // State to store submitted captain data
-  const [captainData, setCaptainData] = useState({})
+  const navigate = useNavigate()
+  const { setCaptain } = useContext(CaptainDataContext)
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault()
 
-    // Build data object and store in state
-    const data = {
-      email: email,
-      password: password
+    const captainData = {
+      email,
+      password
     }
 
-    setCaptainData(data)
-    console.log(data)
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/captains/login`,
+        captainData
+      )
+
+      if (response.status === 200) {
+        const data = response.data
+        setCaptain(data.captain)
+        console.log('Captain login successful')
+        localStorage.setItem('token', data.token);
+        navigate('/captain-home')
+      }
+      
+    } catch (error) {
+      console.error(error)
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.response?.data?.errors?.[0]?.msg ||
+        'Something went wrong'
+      alert(errMsg)
+    }
 
     // Reset form fields after submission
     setEmail('')
@@ -31,7 +53,7 @@ const CaptainLogin = () => {
 
       <div>
         {/* Uber logo */}
-        <img src='../src/assets/Uber.png' alt="Uber Logo" className='w-14 mb-6' />
+        <img src={uberLogo} alt="Uber Logo" className='w-14 mb-6' />
         <h2 className='text-3xl font-bold mb-1'>Welcome back, Captain</h2>
         <p className='text-sm text-gray-500 mb-6'>Login to manage your rides and earnings</p>
 
@@ -57,7 +79,7 @@ const CaptainLogin = () => {
         </form>
 
         {/* Link to captain signup for new captains */}
-        <p className='text-center mt-4 text-sm text-gray-600'>New captain? <Link to="/Captain-Signup" className='text-black font-bold underline'>Create an account</Link></p>
+        <p className='text-center mt-4 text-sm text-gray-600'>New captain? <Link to="/captain-signup" className='text-black font-bold underline'>Create an account</Link></p>
       </div>
 
       {/* User login section at the bottom */}

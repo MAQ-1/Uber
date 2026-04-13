@@ -1,25 +1,53 @@
-import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-
+import React, { useState, useContext } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {UserdataContext} from '../context/userContext.jsx'
+import axios from 'axios'
+import uberLogo from '../assets/Uber.png'
 // User login page — allows existing users to sign in
 const UserLogin = () => {
    // State for form fields
    const [email, setEmail] = useState('')
    const [password, setPassword] = useState('')
-   // State to store submitted user data
-   const [userdata, setUserdata] = useState({})
+   const { setUser } = useContext(UserdataContext)
+  const navigate = useNavigate()
 
-   const submithandler = (e) => {
+
+   const submithandler = async (e) => {
     e.preventDefault()
 
     // Build data object and store in state
-    const data = {
-      email: email,
-      password: password
+    const userData = {
+      email,
+      password
     }
 
-    setUserdata(data)
-    console.log(data)
+     try {
+         const response = await axios.post(`${import.meta.env.VITE_BASE_URL}/users/Login`, userData
+         );
+     
+         if (response.status === 200) {
+           const data = response.data;
+     
+           setUser(data.user);
+     
+           console.log("Login successful 🎉");
+           localStorage.setItem('token', data.token);
+           navigate('/home');
+         }
+     
+       } catch (error) {
+         console.error(error);
+     
+           const errMsg =
+           error?.response?.data?.message ||
+           error?.response?.data?.errors?.[0]?.msg ||
+           "Something went wrong";
+     
+         alert(errMsg);
+       }
+     
+    
+    
 
     // Reset form fields after submission
     setEmail('')
@@ -31,7 +59,7 @@ const UserLogin = () => {
 
       <div>
         {/* Uber logo */}
-        <img src='../src/assets/Uber.png' alt="Uber Logo" className='w-14 mb-8' />
+        <img src={uberLogo} alt="Uber Logo" className='w-14 mb-8' />
 
         {/* Login form */}
         <form onSubmit={submithandler} className='max-w-md w-full mx-auto'>
