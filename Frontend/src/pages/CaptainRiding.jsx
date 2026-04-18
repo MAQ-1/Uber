@@ -2,8 +2,31 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import uberLogo from '../assets/Uber.png'
 import HomeNavImg from '../assets/home.png'
-
+import { useState, useRef } from 'react'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
+import FinishRide from '../components/FinishRide.jsx'
 const CaptainRiding = () => {
+
+    const [finishRidePanel, setfinishRidePanel] = useState(false)
+    const finishRidePanelRef = useRef(null)
+
+
+      useGSAP(function () {
+      if (finishRidePanel) {
+         gsap.to(finishRidePanelRef.current, {
+            transform: 'translateY(0)',
+         })
+      } else {
+         gsap.to(finishRidePanelRef.current, {
+            transform: 'translateY(100%)',
+         })
+      }
+
+
+   }, [finishRidePanel])
+
+
   return (
        <div className='h-screen flex flex-col overflow-hidden relative'>
       {/* Header Section */}
@@ -23,10 +46,19 @@ const CaptainRiding = () => {
         />
       </div>
 
-      <div className='flex flex-col items-center justify-between  p-5 h-1/5 space-y-2 bg-amber-600'>
+      <div className='flex flex-col items-center justify-between  p-5 h-1/5 space-y-2 bg-amber-600'
+      onClick={()=>{
+        setfinishRidePanel(true)
+      }}>
           <h4 className='text-xl font-semibold'>4-Km away </h4>
           <button className='bg-green-600 text-white font-semibold p-2 px-10 rounded-lg'>Start Ride</button>
       </div>
+
+      <div ref={finishRidePanelRef} className= " z-10 h-4/5 translate-y-full bg-white fixed bottom-0 w-full px-3 pb-4 pt-5 space-y-4">
+             <FinishRide
+                setFinishRidePanel={setfinishRidePanel}
+             />
+           </div>
 
       
 

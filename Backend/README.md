@@ -13,6 +13,10 @@
   - [POST /captains/login](#post-captainslogin)
   - [GET /captains/profile](#get-captainsprofile)
   - [POST /captains/logout](#post-captainslogout)
+- [Maps Endpoints](#maps-endpoints)
+  - [GET /maps/get-coordinates](#get-mapsget-coordinates)
+  - [GET /maps/get-distance-time](#get-mapsget-distance-time)
+  - [GET /maps/get-suggestions](#get-mapsget-suggestions)
 
 ---
 
@@ -826,3 +830,358 @@ Logs out the authenticated captain by blacklisting the current JWT token and cle
 - On logout, the token is added to a blacklist in the database, making it invalid for future requests even if it hasn't expired.
 - The `token` cookie is cleared from the client on logout.
 - Any subsequent request using the blacklisted token will be rejected with `401 Unauthorized`.
+
+
+---
+
+## Maps Endpoints
+
+### GET /maps/get-coordinates
+
+Retrieves the latitude and longitude coordinates for a given address. Requires a valid JWT token.
+
+**URL:** `/maps/get-coordinates`  
+**Method:** `GET`  
+**Auth Required:** Yes  
+**Content-Type:** `application/json`
+
+---
+
+#### Request Query Parameters
+
+| Parameter | Type   | Required | Validation                          |
+|-----------|--------|----------|-------------------------------------|
+| `address` | String | Yes      | Minimum 3 characters                |
+
+#### Example Request
+
+```
+GET /maps/get-coordinates?address=New%20York%20City
+```
+
+#### Request Headers
+
+| Header          | Value                | Required                  |
+|-----------------|----------------------|---------------------------|
+| `Authorization` | `Bearer <jwt_token>` | Yes (or token via cookie) |
+
+---
+
+#### Success Response
+
+**Code:** `200 OK`
+
+```json
+{
+  "message": "Coordinates retrieved successfully",
+  "coordinates": {
+    "latitude": 40.7128,
+    "longitude": -74.0060
+  }
+}
+```
+
+#### Output Field Reference
+
+| Field                | Type   | Description                                  |
+|----------------------|--------|----------------------------------------------|
+| `message`            | String | Success message                              |
+| `coordinates`        | Object | Object containing latitude and longitude     |
+| `coordinates.latitude` | Number | Latitude coordinate of the address           |
+| `coordinates.longitude` | Number | Longitude coordinate of the address          |
+
+---
+
+#### Error Responses
+
+**Code:** `400 Bad Request` — Validation failed
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Address must be at least 3 characters long",
+      "path": "address",
+      "location": "query"
+    }
+  ]
+}
+```
+
+**Code:** `401 Unauthorized` — Missing or invalid token
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+**Code:** `500 Internal Server Error` — Unexpected server error
+
+```json
+{
+  "message": "Error retrieving coordinates"
+}
+```
+
+---
+
+#### Status Code Summary
+
+| Status Code | Meaning               | Cause                                            |
+|-------------|-----------------------|--------------------------------------------------|
+| `200`       | OK                    | Coordinates retrieved successfully              |
+| `400`       | Bad Request           | Validation failed, address too short            |
+| `401`       | Unauthorized          | Token missing, invalid or blacklisted           |
+| `500`       | Internal Server Error | Map service error or unexpected server-side failure |
+
+---
+
+#### Notes
+
+- Token can be passed either via `Authorization: Bearer <token>` header or as an `httpOnly` cookie named `token`.
+- Address must be a valid location string (e.g., city name, street address, landmark).
+
+---
+
+### GET /maps/get-distance-time
+
+Calculates the distance and estimated travel time between two addresses. Requires a valid JWT token.
+
+**URL:** `/maps/get-distance-time`  
+**Method:** `GET`  
+**Auth Required:** Yes  
+**Content-Type:** `application/json`
+
+---
+
+#### Request Query Parameters
+
+| Parameter     | Type   | Required | Validation                          |
+|---------------|--------|----------|-------------------------------------|
+| `origin`      | String | Yes      | Minimum 3 characters                |
+| `destination` | String | Yes      | Minimum 3 characters                |
+
+#### Example Request
+
+```
+GET /maps/get-distance-time?origin=New%20York&destination=Boston
+```
+
+#### Request Headers
+
+| Header          | Value                | Required                  |
+|-----------------|----------------------|---------------------------|
+| `Authorization` | `Bearer <jwt_token>` | Yes (or token via cookie) |
+
+---
+
+#### Success Response
+
+**Code:** `200 OK`
+
+```json
+{
+  "message": "Distance and time retrieved successfully",
+  "distance": {
+    "text": "215 km",
+    "value": 215000
+  },
+  "duration": {
+    "text": "3 hours 30 mins",
+    "value": 12600
+  }
+}
+```
+
+#### Output Field Reference
+
+| Field              | Type   | Description                                      |
+|--------------------|--------|--------------------------------------------------|
+| `message`          | String | Success message                                  |
+| `distance`         | Object | Object containing distance information           |
+| `distance.text`    | String | Human-readable distance (e.g., "215 km")        |
+| `distance.value`   | Number | Distance in meters                               |
+| `duration`         | Object | Object containing travel time information        |
+| `duration.text`    | String | Human-readable duration (e.g., "3 hours 30 mins") |
+| `duration.value`   | Number | Duration in seconds                              |
+
+---
+
+#### Error Responses
+
+**Code:** `400 Bad Request` — Validation failed
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Origin must be at least 3 characters long",
+      "path": "origin",
+      "location": "query"
+    }
+  ]
+}
+```
+
+**Code:** `401 Unauthorized` — Missing or invalid token
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+**Code:** `500 Internal Server Error` — Unexpected server error
+
+```json
+{
+  "message": "Error retrieving distance and time"
+}
+```
+
+---
+
+#### Status Code Summary
+
+| Status Code | Meaning               | Cause                                            |
+|-------------|-----------------------|--------------------------------------------------|
+| `200`       | OK                    | Distance and time retrieved successfully        |
+| `400`       | Bad Request           | Validation failed, addresses too short          |
+| `401`       | Unauthorized          | Token missing, invalid or blacklisted           |
+| `500`       | Internal Server Error | Map service error or unexpected server-side failure |
+
+---
+
+#### Notes
+
+- Token can be passed either via `Authorization: Bearer <token>` header or as an `httpOnly` cookie named `token`.
+- Both origin and destination must be valid location strings.
+- Distance is returned in meters; duration is returned in seconds.
+
+---
+
+### GET /maps/get-suggestions
+
+Retrieves address suggestions based on partial input text. Useful for autocomplete functionality. Requires a valid JWT token.
+
+**URL:** `/maps/get-suggestions`  
+**Method:** `GET`  
+**Auth Required:** Yes  
+**Content-Type:** `application/json`
+
+---
+
+#### Request Query Parameters
+
+| Parameter | Type   | Required | Validation                          |
+|-----------|--------|----------|-------------------------------------|
+| `input`   | String | Yes      | Minimum 3 characters                |
+
+#### Example Request
+
+```
+GET /maps/get-suggestions?input=New%20Yor
+```
+
+#### Request Headers
+
+| Header          | Value                | Required                  |
+|-----------------|----------------------|---------------------------|
+| `Authorization` | `Bearer <jwt_token>` | Yes (or token via cookie) |
+
+---
+
+#### Success Response
+
+**Code:** `200 OK`
+
+```json
+{
+  "message": "Suggestions retrieved successfully",
+  "suggestions": [
+    {
+      "main_text": "New York",
+      "secondary_text": "NY, USA",
+      "place_id": "ChIJOwg_06VPwokR4v534GrPIAQ"
+    },
+    {
+      "main_text": "New York City",
+      "secondary_text": "NY, USA",
+      "place_id": "ChIJNf7-gP9PwokRv534GrPIAQ"
+    },
+    {
+      "main_text": "New York University",
+      "secondary_text": "New York, NY, USA",
+      "place_id": "ChIJrW5Yw-dPwokRv534GrPIAQ"
+    }
+  ]
+}
+```
+
+#### Output Field Reference
+
+| Field                    | Type   | Description                                      |
+|--------------------------|--------|--------------------------------------------------|
+| `message`                | String | Success message                                  |
+| `suggestions`            | Array  | Array of address suggestion objects              |
+| `suggestions[].main_text` | String | Primary text of the suggestion (e.g., location name) |
+| `suggestions[].secondary_text` | String | Secondary text providing context (e.g., region, country) |
+| `suggestions[].place_id` | String | Unique identifier for the place                  |
+
+---
+
+#### Error Responses
+
+**Code:** `400 Bad Request` — Validation failed
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Input must be at least 3 characters long",
+      "path": "input",
+      "location": "query"
+    }
+  ]
+}
+```
+
+**Code:** `401 Unauthorized` — Missing or invalid token
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+**Code:** `500 Internal Server Error` — Unexpected server error
+
+```json
+{
+  "message": "Error retrieving suggestions"
+}
+```
+
+---
+
+#### Status Code Summary
+
+| Status Code | Meaning               | Cause                                            |
+|-------------|-----------------------|--------------------------------------------------|
+| `200`       | OK                    | Suggestions retrieved successfully              |
+| `400`       | Bad Request           | Validation failed, input too short              |
+| `401`       | Unauthorized          | Token missing, invalid or blacklisted           |
+| `500`       | Internal Server Error | Map service error or unexpected server-side failure |
+
+---
+
+#### Notes
+
+- Token can be passed either via `Authorization: Bearer <token>` header or as an `httpOnly` cookie named `token`.
+- Input must be at least 3 characters to trigger suggestions.
+- Suggestions are typically sorted by relevance and popularity.
+- The `place_id` can be used for further API calls to get detailed information about a location.

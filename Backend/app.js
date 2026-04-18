@@ -7,10 +7,13 @@ const connectDB = require('./db/db.js');
 const userRoutes = require('./routes/user.routes');
 const cookieParser = require('cookie-parser');
 const captainRoutes = require('./routes/captain.route');
+const mapsRoutes = require('./routes/maps.route');
+const rideRoutes = require('./routes/ride.routes');
 connectDB();
 
 
 app.use(cookieParser());
+
 
 app.use(cors());
 app.use(express.json());
@@ -19,7 +22,8 @@ app.use(express.urlencoded({extended:true}));
 
 app.use('/users',userRoutes);
 app.use('/captains',captainRoutes);
-
+app.use('/maps',mapsRoutes);
+app.use('/rides',rideRoutes);
 
 app.get('/',(req,res)=>{
     res.send("Hello Bhai log kaise ho")

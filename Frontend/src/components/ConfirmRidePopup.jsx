@@ -51,8 +51,21 @@ const ConfirmRidePopup = (props) => {
                     </div>
                 </div>
 
-                <div className='mt-5 w-full '>
-                    <Link to='/captain-riding' onClick={() => {
+                <div className='mt-5 w-full  '>
+                    <form onSubmit={(e) => {
+                        submitHandler(e)
+                    }}>
+
+                        <input
+                         value={otp}
+                         type="text"
+                        onChange={
+                            (e)=>{
+                                setOtp(e.target.value)
+                            }
+                        } className='w-full p-3 border-2 rounded-lg mb-3' placeholder='Enter OTP' />
+
+                        <Link to='/captain-riding' onClick={() => {
                         props.setConfirmRidePopupPanel(true)
                         props.setridePopupPanel(false)
                     }} className='flex justify-center bg-green-600 w-full text-white font-semibold p-2 px-10 rounded-lg'>Confirm</Link>
@@ -61,6 +74,7 @@ const ConfirmRidePopup = (props) => {
                         props.setridePopupPanel(false)
                         props.setConfirmRidePopupPanel(false)
                     }} className='mt-2 w-full bg-red-500 text-white font-semibold p-2 px-10 rounded-lg '>Cancel</button>
+                    </form>
                 </div>
             </div>
         </div>
