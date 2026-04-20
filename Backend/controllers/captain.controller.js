@@ -5,6 +5,10 @@ const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 dotenv.config();
 
+function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Register a new captain
 module.exports.registerCaptain = async (req, res) => {
     // Check for validation errors from express-validator
@@ -15,9 +19,16 @@ module.exports.registerCaptain = async (req, res) => {
 
     try {
         const { Fullname, email, password, vehicle } = req.body;
+        const normalizedEmail = email?.trim().toLowerCase();
+
+        if (!normalizedEmail) {
+            return res.status(400).json({ message: "Valid email is required" });
+        }
 
         // Check if a captain with the same email already exists
-        const existingCaptain = await captainModel.findOne({ email });
+        const existingCaptain = await captainModel.findOne({
+            email: { $regex: `^${escapeRegex(normalizedEmail)}$`, $options: 'i' }
+        });
         if (existingCaptain) {
             return res.status(400).json({ message: "Captain with this email already exists" });
         }
@@ -31,7 +42,7 @@ module.exports.registerCaptain = async (req, res) => {
                 Firstname: Fullname.Firstname,
                 Lastname: Fullname.Lastname
             },
-            email,
+            email: normalizedEmail,
             password: hashedPassword,
             vehicle: {
                 color: vehicle.color,
@@ -67,14 +78,17 @@ module.exports.loginCaptain = async (req, res) => {
 
     try {
         const { email, password } = req.body;
+        const normalizedEmail = email?.trim().toLowerCase();
 
         // Ensure both fields are present
-        if (!email || !password) {
+        if (!normalizedEmail || !password) {
             return res.status(400).json({ message: "Email and password are required" });
         }
 
         // Find captain by email and explicitly select password (excluded by default)
-        const captain = await captainModel.findOne({ email }).select('+password');
+        const captain = await captainModel.findOne({
+            email: { $regex: `^${escapeRegex(normalizedEmail)}$`, $options: 'i' }
+        }).select('+password');
         if (!captain) {
             return res.status(400).json({ message: "Invalid email or password" });
         }

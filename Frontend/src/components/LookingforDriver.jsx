@@ -4,6 +4,9 @@ import location from '../assets/location.png'
 import money from '../assets/money.png'
 import Downarrow from '../assets/arrow-down-double-fill.png'
 const LookingforDriver = (props) => {
+    
+    // Define selectedFare so it doesn't throw a ReferenceError
+    const selectedFare = props.fares && props.vechile ? props.fares[props.vechile] : null;
 
     const simulateDriverFound = () => {
         props.setWaitingforDriver(true)
@@ -12,53 +15,59 @@ const LookingforDriver = (props) => {
 
   return (
         <div>
-            {/* Dropdown Dismiss Icon */}
-            <h5 onClick={() => {
+              {/* Dropdown Dismiss Icon */}
+              <h5 onClick={() => {
                 props.seTvechileFound(false)
-            }} className='p-1 text-center w-[93%] absolute top-13 -right-50'>
-                <img src={Downarrow} alt="Close Panel" loading="lazy" className='w-6 h-6  ' />
-            </h5>
+              }} className='p-1 text-center w-[93%] absolute top-0'>
+                <img src={Downarrow} alt="Close Panel" loading="lazy" className='w-6 h-6 mx-auto opacity-70 cursor-pointer' />
+              </h5>
         
-            {/* Main Heading */}
-            <h3 className='text-2xl font-semibold mb-5'>Looking for a Driver</h3>
+              {/* Main Heading */}
+              <h3 className='text-2xl font-semibold mb-5'>Looking for a Driver</h3>
         
-            <div className='flex gap-2 justify-between flex-col items-center'>
+              <div className='flex gap-2 justify-between flex-col items-center'>
                 {/* Vehicle Preview Image */}
-                <img onClick={simulateDriverFound} className='h-29 cursor-pointer active:scale-95 transition-transform' src={car} alt="Confirm Vehicle" loading="lazy" />
+                <img className='h-29 drop-shadow-md' src={props.vechile === 'auto' ? "https://clipart-library.com/2023/Uber_Auto_312x208_pixels_Mobile.png" : props.vechile === 'moto' || props.vechile === 'motorcycle' ? "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=368/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n" : "https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg"} alt="Confirm Vehicle" loading="lazy" />
         
                 {/* Ride Details Summary Area */}
-                <div className='w-full mt-5'>
+                <div className='w-full mt-5 bg-white rounded-xl shadow-[0_0px_10px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden'>
+                  
+                  {/* Pickup Address Section */}
+                  <div className='flex items-center gap-4 p-3 border-b-2 border-gray-100'>
+                    <div className='flex-shrink-0'>
+                      <img className='h-9 w-9 object-contain bg-gray-100/80 p-2 rounded-full shadow-sm' src={location} alt="Pickup Location" loading="lazy" />
+                    </div>
+                    <div className='flex-1 overflow-hidden'>
+                      <p className='text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-0.5 leading-none'>Pickup</p>
+                      <p className='text-lg -mt-1 font-medium text-gray-800 truncate'>{props.pickup || 'Loading...'}</p>
+                    </div>
+                  </div>
+        
+                  {/* Destination address */}
+                  <div className='flex items-center gap-4 p-3 border-b-2 border-gray-100'>
+                    <div className='flex-shrink-0'>
+                      <img className='h-9 w-9 object-contain bg-gray-100/80 p-2 rounded-full shadow-sm' src={location} alt="Destination Location" loading="lazy" />
+                    </div>
+                    <div className='flex-1 overflow-hidden'>
+                      <p className='text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-0.5 leading-none'>Drop-off</p>
+                      <p className='text-lg -mt-1 font-medium text-gray-800 truncate'>{props.destination || 'Loading...'}</p>
+                    </div>
+                  </div>
+        
+                  {/* Fare and Payment Summary Section */}
+                  <div className='flex items-center gap-4 p-3'>
+                    <div className='flex-shrink-0'>
+                      <img className='h-9 w-9 object-contain bg-green-50 p-2 rounded-full shadow-sm' src={money} alt="Fare Details" loading="lazy" />
+                    </div>
+                    <div className='flex-1'>
+                      <h3 className='text-lg font-medium text-green-700 leading-tight'>₹{selectedFare ?? '--'} </h3>
+                      <p className='text-sm -mt-1 text-gray-600'>Cash <span className="text-[10px] bg-gray-100 px-2 py-0.5 rounded-full ml-1">Cash</span></p>
+                    </div>
+                  </div>
+                </div>
+        
                 
-                {/* Pickup Address Section */}
-                <div className='flex items-center gap-5 p-3 border-b-2'>
-                    <img src={location} alt="Pickup Location" loading="lazy" />
-                    <div>
-                    <h3 className='text-lg font-medium'>562/11-A</h3>
-                    <p className='text-sm -mt-1 text-gray-600'>Kankariya Talab, Ahmedabad</p>
-                    </div>
-                </div>
-        
-                {/* Destination address */}
-                <div className='flex items-center gap-5 p-3 border-b-2'>
-                    <img src={location} alt="Destination Location" loading="lazy" />
-                    <div>
-                    <h3 className='text-lg font-medium'>Main Road-11/6</h3>
-                    <p className='text-sm -mt-1 text-gray-600'>Main city-110064, Ahmedabad</p>
-                    </div>
-                </div>
-        
-                {/* Fare and Payment Summary Section */}
-                <div className='flex items-center gap-5 p-3'>
-                    <img src={money} alt="Fare Details" loading="lazy" />
-                    <div>
-                    <h3 className='text-lg font-medium'>₹193.20 </h3>
-                    <p className='text-sm -mt-1 text-gray-600'>Cash Cash</p>
-                    </div>
-                </div>
-                </div>
-        
-                
-            </div>
+              </div>
             </div>
   )
 }

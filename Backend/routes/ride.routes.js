@@ -15,10 +15,17 @@ router.post('/create',
 
 // Get all fares for comparison
 router.get('/get-fares',
+    authMiddleware.authUser,
     query('pickup').isString().isLength({ min: 3 }).withMessage('Invalid pickup'),
     query('destination').isString().isLength({ min: 3 }).withMessage('Invalid destination'),
-    authMiddleware.authUser,
     rideController.getAllFares
 );
+
+
+router.post('/confirm',
+    authMiddleware.authCaptain,
+    body('rideId').isMongoId().withMessage('Invalid ride ID'),
+    rideController.confirmRide
+)
 
 module.exports = router;

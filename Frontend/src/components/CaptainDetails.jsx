@@ -2,14 +2,19 @@ import React from 'react'
 import car from '../assets/car.webp'
 import location from '../assets/location.png'
 import money from '../assets/money.png'
+import {CaptainDataContext} from '../context/CaptainContext.jsx'
+import { useContext } from 'react'
+
 
 const CaptainDetails = (props) => {
+  const {captain} = useContext(CaptainDataContext)
+
   return (
     <div>
       <div className='flex items-center justify-between'>
         <div className='flex items-center gap-3'>
           <img className='h-12 w-12 rounded-full object-cover' src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTqboo_LRufxKbdTBhRpbYUKzie6N1UeAb-Hw&s" alt="Captain Avatar" />
-          <h2 className='text-lg font-medium capitalize'>Tanmay Kumar</h2>
+          <h2 className='text-lg font-medium capitalize'>{captain?.Fullname?.Firstname} {captain?.Fullname?.Lastname}</h2>
         </div>
         <div className='text-right'>
           <h4 className='text-xl font-bold'>₹295.20</h4>
@@ -37,7 +42,7 @@ const CaptainDetails = (props) => {
 
          
       </div>
-      <div className='flex justify-center mt-2'>
+      {/* <div className='flex justify-center mt-2'>
          <button
        onClick={()=>{
         props.setridePopupPanel(true)
@@ -45,7 +50,7 @@ const CaptainDetails = (props) => {
        className='bg-green-500 text-white font-semibold p-2 px-10 rounded-lg'>
          Search
        </button>
-      </div>
+      </div> */}
        
       
      

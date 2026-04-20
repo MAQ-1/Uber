@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect, useContext } from 'react'
 import { Link } from "react-router-dom";
 import uberLogo from '../assets/Uber.png'
 import Home from '../assets/home.png'
@@ -7,14 +7,104 @@ import RidePopUp from '../components/RidePopUp.jsx'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
 import ConfirmRidePopup from '../components/ConfirmRidePopup.jsx'
+import { SocketDataContext } from '../context/SocketContext.jsx'
+import { CaptainDataContext } from '../context/CaptainContext.jsx'
 
 
 
 const CaptainHome = () => {
   const [ridePopupPanel, setridePopupPanel] = useState(false)
+  const [ride, setRide] = useState(null) // ADDED: State to store incoming ride data
   const ridePopupPanelRef = useRef(null)
   const ConfirmRidePopupRef = useRef(null)
   const [ConfirmRidePopupPanel, setConfirmRidePopupPanel] = useState(false)
+  const joinedCaptainIdRef = useRef(null)
+  const { sendMessage, onMessage, isConnected } = useContext(SocketDataContext)
+  const { captain } = useContext(CaptainDataContext)
+  const captainId = captain?._id || captain?.id || null
+
+
+  
+  useEffect(() => {
+    console.log('[CaptainHome] useEffect triggered:', { isConnected, captainId, joinedId: joinedCaptainIdRef.current })
+    
+    if (!isConnected || !captainId) {
+      joinedCaptainIdRef.current = null
+      return
+    }
+
+    if (joinedCaptainIdRef.current === captainId) {
+      console.log('[CaptainHome] already joined, skipping')
+      return
+    }
+
+    console.log('[CaptainHome] joining as captain:', captainId)
+    joinedCaptainIdRef.current = captainId
+
+    sendMessage('join', { userType: 'captain', userId: captainId })
+    console.log('[CaptainHome] socket join sent:', { captainId })
+
+    console.log('[CaptainHome] setting up new-ride listener')
+    
+    const unsubscribe = onMessage('new-ride', (payload) => {
+      console.log('[CaptainHome] new-ride:', payload)
+      setRide(payload) // ADDED: Store the incoming ride data
+      setridePopupPanel(true)
+    })
+    console.log('[CaptainHome] new-ride listener setup complete')
+
+    // Function to send location
+    const sendLocation = () => {
+      if (navigator.geolocation) {
+        console.log('[CaptainHome] requesting geolocation...')
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const location = {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude
+            }
+            console.log('[CaptainHome] location received:', location)
+            sendMessage('update-location-captain', { userId: captainId, location })
+            console.log('[CaptainHome] location sent:', location)
+          },
+          (error) => {
+            console.error('[CaptainHome] geolocation error:', error.code, error.message)
+          },
+          { timeout: 5000, enableHighAccuracy: false }
+        )
+      } else {
+        console.error('[CaptainHome] geolocation not supported')
+      }
+    }
+
+    // Send location immediately
+    sendLocation()
+
+    // Send captain location every 10 seconds
+    const locationInterval = setInterval(sendLocation, 10000)
+
+    return () => {
+      console.log('[CaptainHome] cleanup called')
+      clearInterval(locationInterval)
+      // Don't unsubscribe here - let it persist
+    }
+  }, [isConnected, captainId])
+
+   
+
+
+  // ConfirmRIde
+
+  async function confirmRide(){
+     const response =await axios.post(`${import.meta.env.VITE_BACKEND_URL}/rides/confirm`,{
+      rideId: ride._id,
+      captainId: captainId
+     })
+
+     setridePopupPanel(false)
+     setConfirmRidePopupPanel(true)
+  }
+
 
 
   // Pop up panel animation
@@ -75,8 +165,10 @@ const CaptainHome = () => {
        <div ref={ridePopupPanelRef} className="z-10 translate-y-full bg-white fixed bottom-0 w-full px-3 pb-4 pt-5 space-y-4">
 
                 <RidePopUp 
+                ride={ride}
                 setridePopupPanel={setridePopupPanel}
                 setConfirmRidePopupPanel={setConfirmRidePopupPanel}
+                confirmRide={confirmRide}
                 />
                 
            </div>

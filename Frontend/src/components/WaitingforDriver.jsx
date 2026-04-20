@@ -17,8 +17,8 @@ function WaitingforDriver(props) {
                 </h5>
             
                 
-               <div className="flex items-center justofy-between ">
-                 <img className='h-29' src={car} alt="Confirm Vehicle" loading="lazy" />
+               <div className="flex items-center justify-between ">
+                 <img className='h-29 drop-shadow-md' src={props.vechile === 'auto' ? "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1648431773/assets/58/c207b0-c12d-47be-a739-d7ee8139d33b/original/UberAuto_v1.png" : props.vechile === 'moto' || props.vechile === 'motorcycle' ? "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_638,w_956/v1649231091/assets/2c/7fa194-c954-49b2-9c6d-a3b8600796f5/original/Uber_Moto_Orange_312x208_pixels_Mobile.png" : "https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg"} alt="Confirm Vehicle" loading="lazy" />
                   <div className='text-right'>
                       <h2 className="text-lg font-semibold">Tanmay</h2>
                       <h4 className="text-md font-semibold">DL8005</h4>

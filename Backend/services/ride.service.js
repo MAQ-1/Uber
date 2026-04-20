@@ -17,7 +17,7 @@ const VALID_VEHICLE_TYPES = Object.keys(FARE_CONFIG);
 function calculateFareForType(distanceInKm, timeInMinutes, vehicleType) {
     const config = FARE_CONFIG[vehicleType];
     const fare = config.baseFare + (distanceInKm * config.perKm) + (timeInMinutes * config.perMinute);
-    return parseFloat(fare.toFixed(2));
+    return Math.round(fare);
 }
 
 // Get all fares (only when needed)
@@ -39,7 +39,7 @@ function generateOTP(length = 6) {
 
 
 
-
+// createRide and 
 module.exports.createRide = async ({
     user, pickup, destination, vehicleType
 }) => {
@@ -86,3 +86,29 @@ module.exports.getAllFares = async (pickup, destination) => {
 
     return getAllFares(distanceInKm, timeInMinutes);
 };
+
+
+// confirm ride
+module.exports.confirmRide = async (rideId) => {
+    if(!rideId) {
+        throw new Error('Ride ID is required');
+    }
+      
+    await rideModel.findOneAndUpdate({
+        _id: rideId,
+    },{
+        status: 'accepted',
+        captain: captain._id
+    })
+    const ride = await rideModel.findOne({
+        _id:ride
+    }).populate('user');
+
+
+    if (!ride) {
+        throw new Error('Ride not found');
+    }
+
+
+    return ride;
+}

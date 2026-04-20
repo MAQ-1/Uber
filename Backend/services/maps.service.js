@@ -1,5 +1,5 @@
 const axios = require('axios');
-
+const CaptainModel = require('../models/captain.model');
 // langitude and longitude of an address
 module.exports.getAddressCoordinate = async (address) => {
     const apiKey = process.env.GEOAPIFY_API_KEY;
@@ -121,4 +121,22 @@ module.exports.getAddressSuggestions = async (input) => {
         console.error('Geoapify Autocomplete Error:', error.message);
         throw new Error('Failed to fetch address suggestions');
     }
+}
+
+
+module.exports.getCaptainInTheRadius=async(lng, lat, radius)=>{ 
+    const captains = await CaptainModel.find({
+        location: {
+            $near: {
+                $geometry: {
+                    type: 'Point',
+                    coordinates: [lng, lat]
+                },
+                $maxDistance: radius * 1000 // convert km to meters
+            }
+        }
+    });
+    
+    console.log('[getCaptainInTheRadius] Query result count:', captains.length);
+    return captains;
 }

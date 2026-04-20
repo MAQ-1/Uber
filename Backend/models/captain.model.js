@@ -22,6 +22,8 @@ const captainSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        lowercase: true,
+        trim: true,
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please enter a valid email address"]
     },
     password: {
@@ -45,10 +47,19 @@ const captainSchema = new mongoose.Schema({
         vehicleType: { type: String, required: true, enum: ['car', 'motorcycle', 'auto'] }
     },
     location: {
-        lat: { type: Number },
-        lng: { type: Number }
+        type: {
+            type: String,
+            enum: ['Point'],
+            default: 'Point'
+        },
+        coordinates: {
+            type: [Number], // [longitude, latitude]
+            default: [0, 0]
+        }
     }
 });
+
+captainSchema.index({ location: '2dsphere' });
 
 captainSchema.methods.generateAuthToken = function () {
     const token = jwt.sign({ captainId: this._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
@@ -64,4 +75,12 @@ captainSchema.statics.hashPassword = async function (password) {
 };
 
 const captainModel = mongoose.model('captain', captainSchema);
+
+// Ensure geospatial index exists
+captainModel.collection.createIndex({ location: '2dsphere' }).catch(err => {
+    if (err.code !== 85) { // 85 = index already exists
+        console.error('Error creating geospatial index:', err);
+    }
+});
+
 module.exports = captainModel;

@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { UserdataContext } from '../context/userContext.jsx'
+import { UserdataContext } from '../context/UserContext.jsx'
 
 
 

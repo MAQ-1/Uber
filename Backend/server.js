@@ -1,7 +1,10 @@
 const app = require('./app')
 const http = require('http');
+const { initializeSocket } = require('./socket');
 const port = process.env.PORT || 4000;
 const server = http.createServer(app);
+
+initializeSocket(server);
 
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -15,7 +18,7 @@ server.on('error', (err) => {
     }
 });
 
-// Graceful shutdown
+// Graceful shutdown so Ctrl+C reliably releases the port.
 process.on('SIGTERM', () => {
     console.log('SIGTERM received, shutting down gracefully');
     server.close(() => {
@@ -31,3 +34,5 @@ process.on('SIGINT', () => {
         process.exit(0);
     });
 });
+
+

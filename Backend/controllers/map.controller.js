@@ -12,7 +12,10 @@ module.exports.getCoordinates = async (req, res) => {
 
     try {
         const coordinates = await mapservice.getAddressCoordinate(address);
-        return res.status(200).json(coordinates);
+        return res.status(200).json({
+            message: 'Coordinates retrieved successfully',
+            coordinates
+        });
     } catch (error) {
         if (error.message === 'Address not found') {
             return res.status(404).json({ message: error.message });
@@ -32,7 +35,12 @@ module.exports.getDistanceAndTime = async (req, res) => {
 
     try {
         const distanceAndTime = await mapservice.getDistanceAndTime(origin, destination);
-        return res.status(200).json(distanceAndTime);
+        return res.status(200).json({
+            message: 'Distance and time retrieved successfully',
+            distance: distanceAndTime.distance,
+            duration: distanceAndTime.duration,
+            raw: distanceAndTime.raw
+        });
 
     } catch (error) {
         if (error.message === 'Origin and destination are required') {
@@ -57,7 +65,10 @@ module.exports.getAddressSuggestions = async (req, res) => {
     const { input } = req.query;
     try{
      const suggestions = await mapservice.getAddressSuggestions(input);
-     return res.status(200).json(suggestions);
+     return res.status(200).json({
+        message: 'Suggestions retrieved successfully',
+        suggestions: suggestions
+     });
     }catch(err){
         console.error('Controller Error:', err.message);
         return res.status(500).json({ message: 'Internal server error' });
