@@ -9,7 +9,7 @@ import gsap from 'gsap'
 import ConfirmRidePopup from '../components/ConfirmRidePopup.jsx'
 import { SocketDataContext } from '../context/SocketContext.jsx'
 import { CaptainDataContext } from '../context/CaptainContext.jsx'
-
+import LiveTracking from '../components/liveTracking.jsx' 
 
 
 const CaptainHome = () => {
@@ -93,16 +93,35 @@ const CaptainHome = () => {
    
 
 
-  // ConfirmRIde
-
+  // ConfirmRide function
   async function confirmRide(){
-     const response =await axios.post(`${import.meta.env.VITE_BACKEND_URL}/rides/confirm`,{
-      rideId: ride._id,
-      captainId: captainId
-     })
+    if (!ride?.rideId) {
+      console.error('No ride to confirm')
+      return
+    }
 
-     setridePopupPanel(false)
-     setConfirmRidePopupPanel(true)
+    try {
+      const token = localStorage.getItem('token')
+      const baseURL = import.meta.env.VITE_BASE_URL || 'http://localhost:4000'
+      
+      const response = await fetch(`${baseURL}/rides/confirm`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ rideId: ride.rideId })
+      })
+
+      if (response.ok) {
+        console.log('Ride confirmed successfully')
+        setConfirmRidePopupPanel(false)
+      } else {
+        console.error('Failed to confirm ride')
+      }
+    } catch (error) {
+      console.error('Error confirming ride:', error)
+    }
   }
 
 
@@ -139,19 +158,19 @@ const CaptainHome = () => {
   return (
     <div className='h-screen flex flex-col overflow-hidden'>
       {/* Header Section */}
-      <div className='fixed p-6 top-0 flex items-center justify-between w-full z-10 pointer-events-none'>
-        <img className='w-16 pointer-events-auto' src={uberLogo} alt="Uber Logo" />
-        <Link to="/captain-login" className='h-10 w-10 bg-white flex items-center justify-center rounded-full z-10 pointer-events-auto shadow-md'>
-          <img className='h-6' src={Home} alt="Home" />
+      <div className='fixed p-6 top-0 flex flex-col right-38 items-center  w-full z-10 pointer-events-none'>
+        <Link to="/captain-login" className='h-10 w-10  bg-white flex items-center justify-center rounded-full z-10 pointer-events-auto shadow-md'>
+          <img className='h-6 ' src={Home} alt="Home" />
         </Link>
+        <img className='w-16 pointer-events-auto' src={uberLogo} alt="Uber Logo" />
+        
       </div>
 
       {/* Map/Visual Section */}
       <div className='h-3/5 bg-gray-200'>
-        <img
+        <LiveTracking
           className='w-full h-full object-cover'
-          src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif"
-          alt="Uber Map"
+          
         />
       </div>
 
@@ -177,6 +196,8 @@ const CaptainHome = () => {
 
            <div ref={ConfirmRidePopupRef} className= " z-10 h-screen translate-y-full bg-white fixed bottom-0 w-full px-3 pb-4 pt-5 space-y-4">
              <ConfirmRidePopup
+             ride={ride}
+             confirmRide={confirmRide}
              setConfirmRidePopupPanel={setConfirmRidePopupPanel}
              setridePopupPanel={setridePopupPanel}
              />

@@ -65,7 +65,8 @@ const RidePopUp = (props) => {
                         props.confirmRide()
                     }} className='w-1/2 bg-gray-200 text-gray-700 font-semibold p-3 rounded-xl hover:bg-gray-300 transition-colors'>Ignore</button>
                     
-                    <button onClick={() => {
+                    <button onClick={async () => {
+                        await props.confirmRide()
                         props.setConfirmRidePopupPanel(true)
                         props.setridePopupPanel(false)
                     }} className='w-1/2 bg-green-600 text-white font-semibold p-3 rounded-xl hover:bg-green-700 transition-colors'>Accept</button>

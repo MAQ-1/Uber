@@ -59,7 +59,9 @@ function App() {
            } />
 
            <Route path="/captain-riding" element={
-             <CaptainRiding/>
+            <CaptainProtectedWrapper>
+              <CaptainRiding/>
+            </CaptainProtectedWrapper>
            } />
 
          </Routes>

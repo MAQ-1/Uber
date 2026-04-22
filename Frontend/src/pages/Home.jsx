@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from 'react'
 import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 import uberLogo from '../assets/Uber.png'
 import downarrow from '../assets/arrow-down-double-fill.png'
 import { useGSAP } from '@gsap/react'
@@ -12,9 +13,13 @@ import LookingforDriver from '../components/LookingforDriver.jsx'
 import WaitingforDriver from '../components/WaitingforDriver.jsx'
 import { SocketDataContext } from '../context/SocketContext.jsx'
 import { UserdataContext } from '../context/UserContext.jsx'
+import LiveTracking from '../components/LiveTracking.jsx'
+import { Link } from 'react-router-dom'
+import HomeIcon from '../assets/home.png'
 
 const Home = () => {
    console.log('[Home] component mounted')
+   const navigate = useNavigate()
    
    const[pickup, setpickup]=useState('')
    const[destination, setdestination]=useState('')
@@ -34,9 +39,13 @@ const Home = () => {
    const [faresLoading, setFaresLoading] = useState(false)
    const [faresError, setFaresError] = useState(null)
    const [vechile, setvechile] = useState(null)
+   const [ride, setRide] = useState(null)
+
+
+
    const { sendMessage, onMessage, isConnected } = useContext(SocketDataContext)
    const { user } = useContext(UserdataContext)
-   console.log('[Home] context values:', { isConnected, userId: user?._id || user?.id })
+  
 
 
    const token = localStorage.getItem('token')
@@ -58,17 +67,35 @@ const Home = () => {
        console.log('[Home] socket join sent:', { userId, sent })
 
        const unsubscribe = onMessage('ride-confirmed', (payload) => {
-          console.log('[Home] ride-confirmed:', payload)
-          setvechileFound(false) // ADDED: Show vehicle found panel
-          setWaitingforDriver(true) // ADDED: Show waiting for driver panel
-          
+          console.log('[Home] ride-confirmed received:', payload)
+          console.log('[Home] payload structure:', JSON.stringify(payload, null, 2))
+          console.log('[Home] setting vechileFound to false and waitingforDriver to true')
+          seTvechileFound(false)
+          setWaitingforDriver(true)
+          setRide(payload)
        })
 
+       const unsubscribeRideStarted = onMessage('ride-started', (payload) => {
+          console.log('[Home] ride-started received:', payload)
+          console.log('[Home] ride has started, navigating to /riding')
+          setRide(payload)
+          localStorage.setItem('activeRideData', JSON.stringify(payload))
+          
+          // Navigate to riding page after a short delay to ensure data is set
+          setTimeout(() => {
+             navigate('/riding', { state: { rideData: payload } })
+          }, 500)
+       })
+        
+
+        
+       
        return () => {
-          console.log('[Home] socket listener cleanup: ride-confirmed')
+          console.log('[Home] socket listener cleanup: ride-confirmed and ride-started')
           unsubscribe()
+          unsubscribeRideStarted()
        }
-   }, [isConnected, user, sendMessage, onMessage])
+   }, [isConnected, user])
    
 
 
@@ -115,6 +142,14 @@ const Home = () => {
 
    async function createRide() {
     if (!vechile) {
+       return null
+    }
+
+    console.log('Creating ride with token:', token ? 'Token exists' : 'No token')
+    console.log('User context:', user)
+    
+    if (!token) {
+       console.error('No authentication token found')
        return null
     }
 
@@ -222,14 +257,20 @@ const Home = () => {
 
   return (
     <div className='h-screen w-screen relative overflow-hidden'>
-           <img src={uberLogo} alt="Uber Logo" className='w-14  absolute overflow-x-hidden' /> 
+         <div className='z-10 flex flex-col pointer-events-none'>
+           <img src={uberLogo} alt="Uber Logo" className='w-16 left-5 top-5 absolute z-50 pointer-events-auto' /> 
+           <Link to="/home" className='left-5 top-20 fixed h-10 w-10 bg-white flex items-center justify-center rounded-full z-50 shadow-md cursor-pointer pointer-events-auto'>
+            <img className='h-6 w-6' src={HomeIcon} alt="Home" />
+          </Link>
+         </div>
 
-           <div className='h-screen w-screen'> 
+           <div className='h-screen w-screen z-0 absolute top-0 left-0'> 
             {/* Temp Image Useage */}
-              <img onClick={() => {
+              <LiveTracking onClick={() => {
                 setvehiclePanel(false)
                 setpanel(true)
-              }} className='h-full w-full object-fill absolute' src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif" alt="Uber Home"  />
+                setconfirmRidePanel(false)
+              }} className='h-full w-full object-fill absolute'   />
            </div>
 
            <div className={`flex flex-col justify-end h-screen absolute bottom-0 w-full`}>
@@ -336,7 +377,10 @@ const Home = () => {
             <div ref={waitingforDriverRef} className="z-10 translate-y-full bg-white fixed bottom-0 w-full px-3 py-6 pt-12 space-y-4">
 
                 <WaitingforDriver 
-                 setWaitingforDriver={setWaitingforDriver}
+                  ride={ride}
+                  seTvechileFound={seTvechileFound}
+                  setWaitingforDriver={setWaitingforDriver}
+                 waitingforDriver={waitingforDriver}
                 />
                 
            </div>

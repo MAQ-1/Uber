@@ -99,20 +99,73 @@ module.exports.confirmRide = async (req, res) => {
 
     const { rideId } = req.body;
     try{ 
-        const ride= await rideService.confirmRide(rideId, req.captain._id);
-
-        sendMessageToSocketId(ride.user.socketId, {
-            event: 'ride-confirmed',
-            data:ride
-        });
-
-
+        const ride = await rideService.confirmRide(rideId, req.captain._id);
+        
+        console.log('Ride confirmed, sending socket message to user:', ride.user._id, 'socketId:', ride.user.socketId);
+        
+        if (ride.user.socketId) {
+            sendMessageToSocketId(ride.user.socketId, {
+                event: 'ride-confirmed',
+                data: {
+                    ...ride.toObject(),
+                    captain: {
+                        name: req.captain.Fullname.Firstname + ' ' + (req.captain.Fullname.Lastname || ''),
+                        vehicle: {
+                            plate: req.captain.vehicle.plate,
+                            color: req.captain.vehicle.color,
+                            vehicleType: req.captain.vehicle.vehicleType
+                        }
+                    }
+                }
+            });
+        } else {
+            console.log('User socketId not found, cannot send ride-confirmed event');
+        }
 
         return res.status(200).json({ message: 'Ride confirmed successfully', ride });
-        
-       
     }
     catch(error){
+        console.error('Controller Error:', error.message);
+        return res.status(500).json({ message: error.message || 'Internal server error' });
+    }
+}
+
+module.exports.startRide = async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { rideId, otp } = req.query;
+    try{ 
+        const ride = await rideService.startRide(rideId, otp, req.captain._id);
+        sendMessageToSocketId(ride.user.socketId, {
+            event: 'ride-started',
+            data: ride
+        });
+        return res.status(200).json({ message: 'Ride started successfully', ride });
+    }
+    catch(error){
+        console.error('Controller Error:', error.message);
+        return res.status(500).json({ message: error.message || 'Internal server error' });
+    }
+} 
+
+
+module.exports.endRide = async (req, res) => {
+    if(!validationResult(req).isEmpty()) {
+        return res.status(400).json({ errors: validationResult(req).array() });
+    }
+
+    const { rideId } = req.body;
+    try {
+        const ride = await rideService.endRide(rideId, req.captain._id);
+        sendMessageToSocketId(ride.user.socketId, {
+            event: 'ride-ended',
+            data: ride
+        });
+        return res.status(200).json({ message: 'Ride ended successfully', ride });
+    } catch (error) {
         console.error('Controller Error:', error.message);
         return res.status(500).json({ message: error.message || 'Internal server error' });
     }
